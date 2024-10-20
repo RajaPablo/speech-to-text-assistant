@@ -61,8 +61,8 @@ def generate_response(transcript):
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": f"The user said: {transcript}. How would you respond in simple English?"}
+            {"role": "system", "content": "You are an assistant that helps complete sentences for users with speech impairments or stuttering."},
+            {"role": "user", "content": f"Complete this sentence: {transcript}"}
         ]
     )
     return response.choices[0].message.content.strip()
@@ -73,17 +73,9 @@ def ai_assistant(audio_file):
         # Step 1: Transcribe audio
         transcript = transcribe_audio(audio_file)
         
-        # Step 2: Search in the vector store for similar queries
-        similar_transcript = search_index(transcript)
+        # Step 2: Generate a response to complete the sentence
+        response = generate_response(transcript)
         
-        # Step 3: Generate a response based on either similar query or the new one
-        if similar_transcript != "No close match found.":
-            response = f"Found a similar query: {similar_transcript}\nHere's an appropriate response:"
-        else:
-            response = "This seems like a new query. Generating a fresh response:\n"
-            add_to_index(transcript)
-        
-        response += "\n" + generate_response(transcript)
         return transcript, response
     except Exception as e:
         return str(e), "An error occurred while processing your request."
@@ -101,10 +93,10 @@ iface = gr.Interface(
     inputs=gr.Audio(sources=["microphone"], type="filepath"),
     outputs=[
         gr.Textbox(label="Transcript"),
-        gr.Textbox(label="Response")
+        gr.Textbox(label="Completed Sentence")
     ],
-    title="Speech-to-Text AI Assistant",
-    description="Speak into the microphone and get AI-powered responses."
+    title="Speech-to-Text Sentence Completion Assistant",
+    description="Speak into the microphone and get AI-powered sentence completions."
 )
 
 if __name__ == "__main__":
